@@ -575,7 +575,7 @@ input:checked + .toggle-slider:before {
     width: 100%;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 14px;
     line-height: 1.6;
     resize: none;
