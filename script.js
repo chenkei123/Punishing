@@ -43,6 +43,8 @@ const state = {
     animationSpeed: 50,
     leftPanelFolded: false,
     rightPanelFolded: false,
+    // 标记当前输入框是否包含未保存的文本（用于防止切换角色/背景时被重置）
+    isTypingUnsaved: false,
     // 默认角色 - 指向本地 characters 文件夹
     defaultCharacters: [
         { id: 1, name: 'Rosetta', url: 'characters/Rosetta_-_Arete.webp' },
@@ -269,6 +271,12 @@ function setupEventListeners() {
             e.preventDefault();
             addDialog();
         }
+    });
+
+    // 标记输入框是否有未保存文本，避免切换角色/背景时被重置
+    elements.dialogInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        state.isTypingUnsaved = val.trim().length > 0;
     });
     
     // 角色名称输入
@@ -507,14 +515,20 @@ function updatePreview() {
 // 更新对话框显示
 function updateDialogDisplay() {
     const currentScene = state.scenes[state.currentSceneIndex];
-    
-    if (currentScene.dialogs.length > 0 && currentScene.currentDialogIndex < currentScene.dialogs.length) {
+    const hasSavedDialog = currentScene.dialogs.length > 0 && currentScene.currentDialogIndex < currentScene.dialogs.length;
+
+    if (hasSavedDialog) {
         const dialog = currentScene.dialogs[currentScene.currentDialogIndex];
         elements.characterName.value = dialog.character || '???';
+        // 显示已保存的对话文本，并清除未保存标记
         elements.dialogInput.value = dialog.text || '';
+        state.isTypingUnsaved = false;
     } else {
         elements.characterName.value = '???';
-        elements.dialogInput.value = '';
+        // 仅在用户当前没有未保存输入时才清空输入框，避免切换角色/背景时覆盖用户正在输入的文本
+        if (!state.isTypingUnsaved) {
+            elements.dialogInput.value = '';
+        }
     }
 }
 
@@ -548,6 +562,7 @@ function addDialog() {
     
     // 清空输入框准备下一句
     elements.dialogInput.value = '';
+    state.isTypingUnsaved = false;
 }
 
 // 下一句 - 保存当前画面到栈，仅重置对话文本（与 handleNextLine 逻辑一致）
